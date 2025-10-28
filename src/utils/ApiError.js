@@ -3,6 +3,7 @@ class ApiError extends Error {
         statusCode,
         message = "Something went wrong at API ",
         errors = [],
+        //errors ko bundle mei dedenge
         statck = ""
     ) {
         super(message)
@@ -10,7 +11,7 @@ class ApiError extends Error {
         this.data = null
         this.message = message
         this.success = false;
-        this.errors = errors
+        this.errors = this.errors
 
         if (statck) {
             this.stack = statck
