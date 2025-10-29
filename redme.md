@@ -20,3 +20,17 @@ Create a Orgnization (pahle se hei to nahi karna )
 -> ab .env file mei database URI = or Post na naam mention kar0 
 
 ->
+
+
+
+
+<!-- video 11 File handling and thier party apps  -->
+1. Work on AWS Clouds and other platforms to do this 
+2. fornt end dont have authority to do this 
+3. express also dont have this but can we do using thierd party partners 
+
+4. fileupload can we done usind seprate folder 
+5. this works for all the formates like image, pdf, video and other and it is middleware 
+
+Services: Cloudinary , express fileupload,multer 
+
