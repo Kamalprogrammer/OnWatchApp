@@ -32,5 +32,10 @@ Create a Orgnization (pahle se hei to nahi karna )
 4. fileupload can we done usind seprate folder 
 5. this works for all the formates like image, pdf, video and other and it is middleware 
 
-Services: Cloudinary , express fileupload,multer 
+Services: Cloudinary , express fileupload,multer
+
+
+-> Main work is done by multer through multer and with the help of cloudinary just on server 
+# multer->localstorage( to prevent falior or for production grade )->cloudinary
+# cn->server
 
