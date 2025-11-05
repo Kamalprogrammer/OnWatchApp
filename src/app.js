@@ -4,31 +4,21 @@ import cookieParser from 'cookie-parser'
 const app = express()
 
 
-// configuration of cors
-
-// Hear more about is using documentation
 app.use(cors({
-    origin:process.env.CORS_ORIGIN,
-    credentials:true
+    origin: process.env.CORS_ORIGIN,
+    credentials: true
 }))
 
 
-// when we need to accept the html body, forms etc 
-// pahle body parser ka use karte the 
-app.use(express.json({limit:'16kb'}))
-
-
-// url  में जब हम Space आदि देते है तो उसके अड्रेस में %20 आता है, इसए सॉल्वे करने के लिए 
-// हम इसका उपयोग करते है 
-// object के अंदर extended true का मतलब है कि हम nested object को भी accept कर सकते है
-app.use(express.urlencoded({extended:true,limit:'16kb'}))
-
-// file like images, pdf ko store krne ke liye folder public bna dete hei 
+app.use(express.json({ limit: '16kb' }))
+app.use(express.urlencoded({ extended: true, limit: '16kb' }))
 app.use(express.static("public"))
-// public ek folder hei jismei ham apne assess rakhte hei jaise images etc
-
-// cookis par crud operation karne ke liye cookie parser ka use kate hei 
-
 app.use(cookieParser())
 
+
+// routes import 
+import userRouter from './routes/user.routes.js'
+
+
+app.use("/api/v1/users", userRouter)
 export { app }

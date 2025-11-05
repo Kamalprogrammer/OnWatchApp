@@ -3,8 +3,7 @@ class ApiError extends Error {
         statusCode,
         message = "Something went wrong at API ",
         errors = [],
-        //errors ko bundle mei dedenge
-        statck = ""
+        stack = ""
     ) {
         super(message)
         this.statusCode = statusCode
@@ -21,8 +20,5 @@ class ApiError extends Error {
         }
     }
 }
-
-
-// API errors ko generalise karna 
 
 export { ApiError }
