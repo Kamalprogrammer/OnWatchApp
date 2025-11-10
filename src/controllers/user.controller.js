@@ -3,8 +3,31 @@ import { ApiError } from "../utils/ApiError.js"
 import { User } from "../modles/user.model.js"
 import { uploadOnCludinary } from "../utils/cloudinary.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
-// register user 
+import { appendFile } from "fs";
 
+const generateAccessAndRefreshTokens = async (userId) => {
+    try {
+        const user = await User.findById(userId)
+        // these are all methods
+        const accessToken = user.generateAccessToken()
+        const refreshToken = user.generateRefreshToken()
+
+        // saving refreshToken to db
+        user.refreshToken = refreshToken
+        await user.save({ validateBeforeSave: false })
+
+        return { accessToken, refreshToken }
+
+    } catch (err) {
+        throw new ApiError(500, "something went wrong while generating refresh and acess tokens")
+    }
+}
+
+
+
+
+
+// register user 
 const registerUser = asyncHandler(async (req, res) => {
     // res.status(200).json({
     //     message: "Kamal Vishwakarma"
@@ -26,7 +49,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
     // url, form, body
     const { fullName, userName, email, password } = req.body
-    console.log("email : ", email);
+    // console.log("email : ", email);
 
     // 2. Validation in Input Fields 
     // simpel way 
@@ -44,8 +67,8 @@ const registerUser = asyncHandler(async (req, res) => {
 
 
 
-    // 3. Check User is regiiterd before or not 
-    const existedUser = User.findOne({
+    // 3. Check User is registerd before or not 
+    const existedUser = await User.findOne({
         $or: [{ userName }, { email }]
     })
     // console.log(existedUser)
@@ -54,9 +77,16 @@ const registerUser = asyncHandler(async (req, res) => {
     }
 
     // 4. Checking file 
-    const avatarLocalPath = req.files?.avatar[0]?.path;
-    const coverImageLocalPath = req.files?.coverImage[0]?.path;
+    const avatarLocalPath = req.files?.avatar?.[0]?.path;
+    // const coverImageLocalPath = req.files?.coverImg?.[0]?.path;
+    // better way from this 
+    let coverImageLocalPath;
+    if (req.files && Array.isArray(req.files.coverImg) && req.files.coverImg.length > 0) {
+        coverImageLocalPath = req.files.coverImg[0].path;
+    }
 
+
+    // console.log(req.files)
     //    minimum ke to honachaahiey 
     if (!avatarLocalPath) {
         throw new ApiError(400, "Avavtar File is requird")
@@ -81,7 +111,7 @@ const registerUser = asyncHandler(async (req, res) => {
         userName: userName.toLowerCase()
     })
     // hm data se poochh rhe hei ye user bna hei ya nahi 
-    const createdUser = await user.findById(user._id).select(
+    const createdUser = await User.findById(user._id).select(
         "-password -refreshToken " //jo hme nahi chahiye 
     )
 
@@ -94,8 +124,122 @@ const registerUser = asyncHandler(async (req, res) => {
     return res.status(201).json(
         new ApiResponse(200, createdUser, "User Registerd Successfully Woyaa")
     )
+    // console.log("FILES:", req.files);
+    // console.log("BODY:", req.body);
 
 })
 
-export { registerUser };
+
+
+
+
+// steps for Login user: 
+// 1. Get Data From User 
+// 2. Encrpt it 
+// 3. Save into database 
+// 4. hash using jwt 
+// 5. now send it to the front end using cookie Parser 
+// 6. Compare it with the saved one 
+// 7. Assign Page where we want to take user 
+
+
+
+
+// 1. req.body
+// 2. username or email se login karwana 
+// 3. find the user 
+// 4.. chceck the passowrd - nahi to notice 
+// 5. access or refres token share krna 
+// 6. send them into the front end in cookies (secure cokies)
+// 7. send a response
+// 8. set riute for it 
+
+
+const loginUser = asyncHandler(async (req, res) => {
+    const { email, username, password } = req.body
+
+    // usign uername and email login
+    // if(!email)
+    if (!username || !email) {
+        throw new ApiError(400, "usernameor email is requird")
+    }
+
+    // check it into database (inmei se koi bhi mile )
+    const user = await User.findOne({
+        $or: [{ username }, { email }]
+    })
+
+    if (!user) {
+        throw new ApiError(404, "User Does not exists")
+    }
+
+    // check our own user credentials 
+    const isPasswordValid = await user.isPasswordCorrect(password)
+    if (!isPasswordValid) {
+        throw new ApiError(401, "Invalid User Credentials")
+    }
+
+    // now after this create Access And refresh token in seprate methode
+    const { refreshToken, accessToken } = await generateAccessAndRefreshTokens(user._id)
+
+    const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
+
+    const options = {
+        httpOnly: true,
+        secure: true
+    }
+
+    return res
+        .status(200)
+        .cookie("accessToken", accessToken, options)
+        .cookie("refreshToken", refreshToken, options)
+        .json(
+            200, {
+            user: loggedInUser, accessToken, refreshToken
+        },
+            "userLogged In Successfully"
+
+        )
+
+})
+
+
+
+// 1. remove cookeies 
+// 2. refresh token ko remove karna 
+const logoutUser = asyncHandler(async (req, res) => {
+    User._id.findByIdAndUpdate(
+        req.user._id,
+        {
+            $set: {
+                refreshToken: undefined
+            }
+        },
+        {
+            new: true
+            // ab ye isi nai velue ko return karega na ki purani jismeidata hoga 
+        }
+    )
+    const options = {
+        httpOnly: true,
+        secure: true
+    }
+
+    return res
+        .status(200)
+        .clearCookie("accessToken", options)
+        .ckearCookie("refreshToken", options)
+        .json(new ApiResponse(200, {}, "User Logged Out"))
+})
+
+
+
+
+
+
+export {
+    registerUser,
+    loginUser,
+    logoutUser
+};
 
