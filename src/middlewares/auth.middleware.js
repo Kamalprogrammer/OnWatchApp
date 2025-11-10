@@ -1,13 +1,13 @@
 // it will verify is user there or not 
 import jwt from "jsonwebtoken"
-import { ApiError } from "../utils/ApiError";
-import { asyncHandler } from "../utils/asyncHandler";
-import { User } from "../modles/user.model";
+import { ApiError } from "../utils/ApiError.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { User } from "../modles/user.model.js";
 
 export const verifyJWT = asyncHandler(async (req, res, next) => {
     try {
         const token = req.cookies?.accessToken || req.header
-            ("Authorization")?.replace("Cearer", "")
+            ("Authorization")?.replace("Bearer", "")
 
         if (!token) {
             throw new ApiError(401, "unAuthorised Access")

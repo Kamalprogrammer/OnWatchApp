@@ -9,8 +9,8 @@ const app = express()
 
 // Hear more about is using documentation
 app.use(cors({
-    origin: process.env.CORS_ORIGIN,
-    credentials: true
+  origin: process.env.CORS_ORIGIN,
+  credentials: true
 }))
 
 app.use(express.json({ limit: '16kb' }))
@@ -22,6 +22,9 @@ app.use(cookieParser())
 // import routes 
 console.log(" Routes mounted: /api/v1/users");
 console.log("✅ userRouter registered");
+
+
+
 // routes declaration only 
 app.use("/api/v1/users", userRouter);
 export { app }
