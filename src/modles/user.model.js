@@ -31,7 +31,7 @@ const userSchema = new Schema(
         },
 
         // this is depedent onvideo schema
-        coverimage: {
+        coverImage: {
             type: String, //cloudinary url 
         },
         watchHistory: [{
