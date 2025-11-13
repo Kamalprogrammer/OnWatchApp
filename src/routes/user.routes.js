@@ -17,7 +17,7 @@ import express from "express";
 import {
     changeCurrentPassword,
     getCurrentUser,
-    getUserChennalProfile,
+    // getUserChennalProfile,
     getWatchHistory,
     loginUser,
     logoutUser,
@@ -25,7 +25,8 @@ import {
     registerUser,
     updataAccountDetails,
     updateUserAvatar,
-    updateUserCoverImage
+    updateUserCoverImage,
+    getUserChannelProfile
 } from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.middleware.js"
 import { verifyJWT } from "../middlewares/auth.middleware.js";
@@ -62,10 +63,10 @@ router
 router
     .route("/cover-image")
     .patch(verifyJWT, upload
-        .single("/coverImage"), updateUserCoverImage)
+        .single("coverImage"), updateUserCoverImage)
 
 // when we get data from params
-router.route("/c/:username").get(verifyJWT, getUserChennalProfile)
+router.route("/c/:username").get(verifyJWT, getUserChannelProfile)
 
 router.route("/history").get(verifyJWT, getWatchHistory)
 
