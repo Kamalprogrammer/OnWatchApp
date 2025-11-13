@@ -309,10 +309,12 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
 })
 
 // getCurrentPassword
-const getCurrentPassword = asyncHandler(async (req, res) => {
+const getCurrentUser = asyncHandler(async (req, res) => {
     return res
         .status(200)
-        .json(200, req.user, "current user fetched successfully")
+        .json(new ApiResponse
+            (200, req.user, "current user fetched successfully")
+        )
 })
 // updateDetails 
 const updataAccountDetails = asyncHandler(async (req, res) => {
@@ -322,7 +324,7 @@ const updataAccountDetails = asyncHandler(async (req, res) => {
     }
 
     // find user 
-    const user = User.findByIdAndUpdate(
+    const user = await User.findByIdAndUpdate(
         req.user?._id,
         {
             $set: {
@@ -366,6 +368,9 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
         .status(200)
         .json(new ApiResponse(200, user, "Avatar Image has been Updated Succefully "))
 
+    // delete old image 
+
+
 })
 // Now updating Cover File Image 
 const updateUserCoverImage = asyncHandler(async (req, res) => {
@@ -399,6 +404,88 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
         .json(new ApiResponse(200, user, "CoverImage has been Updated Succefully "))
 })
 
+const getUserChennalProfile = asyncHandler(async (req, res) => {
+
+})
+
+
+const getUserChannelProfile = asyncHandler(async (req, res) => {
+    // Channel profile from URl But Here will get from Params
+    const { username } = req.params
+    if (!username?.trim()) {
+        throw new ApiError(400, "UerName Is Missing While searching for channel")
+
+        // when we have user from database 
+        // User.find({username}): here we have to do multiple things while searching but with the help of aggrigation pipeline this becoem very eassy 
+
+        const channel = await User.aggregate([
+            {
+                $match: {
+                    username: username?.toLowerCase()
+                },
+                $lookup:{
+                    from:"subscriptions",
+                    localField:"_id",
+                    foreignField:"channel",
+                    as:"subscribers"
+                }
+            },
+            {
+                $lookup:{
+                    from:"subscriptions",
+                    localField:"_id",
+                    foreignField:"subscriber",
+                    as:"subscribedTo" 
+                    // jitne hmne channel subscribe kr rakhe ehi 
+                }
+            },
+            {
+                $addFields:{
+                    subscibersCount:{
+                        $size:"$subscribers"
+                    },
+                    channelsSubscribedToCount:{
+                        $size:"$subscribedTo"
+                    },
+                    isSubscribed:{
+                        $cond:{
+                            if:{$in:[req.user?._id,"subscribers.subscriber "]},
+                            then:true,
+                            else:false
+                        // subscriber: from data model 
+                        }
+                    }
+                }
+            },
+            {
+                // front end ko selected chije pass karna 
+                $project:{
+                    fullName:1,
+                    userName:1,
+                    subscibersCount:1,
+                    channelsSubscribedToCount:1,
+                    isSubscribed:1,
+                    avatar:1,
+                    coverImage:1,
+                    email:1,
+
+                }
+            }
+        ])
+       if(!chennel?.length){
+        throw new ApiError(404,"channel does not exists ")
+       }
+    }
+
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200,channel[0],"User Channel Fetched Successfully ")
+    )
+})
+
+
+console.log(`this is chennal profile : ${getUserChannelProfile}`)
 
 export {
     registerUser,
@@ -407,8 +494,10 @@ export {
     refreshAccessToken,
     changeCurrentPassword,
     updataAccountDetails,
-    getCurrentPassword,
+    getCurrentUser,
     updateUserAvatar,
-    updateUserCoverImage
+    updateUserCoverImage,
+    getUserChennalProfile,
+    
 };
 
