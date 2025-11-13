@@ -484,6 +484,65 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
     )
 })
 
+// collecting users Watch History 
+
+const getWatchHistory = asyncHandler(async(req,res)=>{
+    const user = await User.aggregate([
+        {
+            // searched a user from mongoose and converted the string id
+            $match:{
+                _id:new mongoose.Typess.ObjectId(req.user._id)
+            }
+        },
+        {
+            $lookup:{
+                from:"videos",
+                localField:"watchHistory",
+                foreignField:"_id",
+                as:"watchHistory",
+                pipeline:[
+                    {
+                        $lookup:{
+                            from:"users",
+                            localField:"owner",
+                            foreignField:"_id",
+                            as:"owner",
+                            pipeline:[
+                                {
+                                    $project:{
+                                        fullName:1,
+                                        username:1,
+                                        avatar:1
+                                    }
+                                }
+                            ]
+
+                        }
+                    },
+                    {
+                        // using this we will make frontend work easiy while distructuring data
+                        $addFields:{
+                            owner:{
+                                $first:"$owner"
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    ])
+
+
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(
+            200,
+            user[0].getWatchHistory,
+            "watch History Fetched Succesfully"
+        )
+    )
+})
 
 console.log(`this is chennal profile : ${getUserChannelProfile}`)
 
@@ -498,6 +557,7 @@ export {
     updateUserAvatar,
     updateUserCoverImage,
     getUserChennalProfile,
+    getWatchHistory
     
 };
 
